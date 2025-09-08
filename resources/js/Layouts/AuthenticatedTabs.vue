@@ -9,10 +9,10 @@
                     :href="route(tab.name)"
                     class="py-2 px-4 text-sm font-medium border-b-2 -mb-[2px] transition-colors"
                     :class="{
-                        'border-blue-500 text-blue-600': $page.component.startsWith('Inventory/'),
-                        'border-green-500 text-green-600': $page.component.startsWith('Warehouse/'),
-                        'border-red-500 text-red-600': $page.component.startsWith('Location/'),
-                        'border-transparent text-gray-600 hover:text-blue-500 hover:border-blue-300': !$page.component.startsWith(tab.component)
+                        'border-blue-500 text-blue-600': page.component.startsWith('Inventory/'),
+                        'border-green-500 text-green-600': page.component.startsWith('Warehouse/'),
+                        'border-red-500 text-red-600': page.component.startsWith('Location/'),
+                        'border-transparent text-gray-600 hover:text-blue-500 hover:border-blue-300': !page.component.startsWith(tab.component)
                     }"
                 >
                     {{ tab.label }}
@@ -28,6 +28,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Link, usePage } from '@inertiajs/vue3'
+
+const page = usePage();
 
 const tabs = [
     { name: 'inventories.index', label: 'Inventory', component: 'Inventory' },

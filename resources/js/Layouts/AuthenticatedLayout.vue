@@ -126,14 +126,14 @@
                             <div class="flex flex-row items-center">
                                 <div class="user-info">
                                     <div class="user-avatar">
-                                        <span>{{ $page.props.auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
+                                        <span>{{ page.props.auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
                                     </div>
                                     <div class="user-details">
                                         <span class="user-role">{{
-                                            $page.props.auth.user?.title || 'User'
+                                            page.props.auth.user?.title || 'User'
                                         }} </span>
                                         <span class="user-name">{{
-                                            $page.props.auth.user?.name || 'Unknown'
+                                            page.props.auth.user?.name || 'Unknown'
                                         }}</span>
                                     </div>
                                 </div>
