@@ -53,15 +53,6 @@ class AssetController extends Controller
             });
         }
 
-        if($request->filled('sub_location_ids') && is_array($request->sub_location_ids)){
-            $assetItems->whereHas('asset', function($query) use ($request) {
-                $query->whereIn('sub_location_id', $request->sub_location_ids);
-            });
-        } elseif($request->filled('sub_location_id')){
-            $assetItems->whereHas('asset', function($query) use ($request) {
-                $query->where('sub_location_id', $request->sub_location_id);
-            });
-        }
 
         if($request->filled('fund_source_id')){
             $assetItems->whereHas('asset', function($query) use ($request) {
@@ -125,11 +116,10 @@ class AssetController extends Controller
         $assetItems->orderBy('created_at', 'desc');
 
         $assetItems = $assetItems->with([
-            'asset:id,asset_number,acquisition_date,fund_source_id,region_id,asset_location_id,sub_location_id',
+            'asset:id,asset_number,acquisition_date,fund_source_id,region_id,asset_location_id',
             'asset.fundSource:id,name',
             'asset.region:id,name',
             'asset.assetLocation:id,name',
-            'asset.subLocation:id,name',
             'category:id,name',
             'type:id,name',
             'assignee:id,name',
@@ -152,7 +142,7 @@ class AssetController extends Controller
         return inertia('Assets/Index', [
             'locations' => $locations,
             'assets' => AssetItemResource::collection($assetItems),
-            'filters' => $request->only('page','per_page','search','region_id','location_id','sub_location_id','fund_source_id','category_id','type_id','assignee_id','acquisition_from','acquisition_to','created_from','created_to','status','depreciation_filter'),
+            'filters' => $request->only('page','per_page','search','region_id','location_id','fund_source_id','category_id','type_id','assignee_id','acquisition_from','acquisition_to','created_from','created_to','status','depreciation_filter'),
             'assetsCount' => $count,
             'regions' => Region::get(),
             'fundSources' => FundSource::get(),
@@ -193,7 +183,6 @@ class AssetController extends Controller
                     'fund_source_id' => 'required|exists:fund_sources,id',
                     'region_id' => 'required|exists:regions,id',
                     'asset_location_id' => 'required|exists:asset_locations,id',
-                    'sub_location_id' => 'required|exists:sub_locations,id',
                 ]);
 
                 // Validate asset items array
@@ -337,7 +326,6 @@ class AssetController extends Controller
             $assetValidated = $request->validate([
                 'region_id' => 'required|exists:regions,id',
                 'asset_location_id' => 'required|exists:asset_locations,id',
-                'sub_location_id' => 'required|exists:sub_locations,id',
                 'fund_source_id' => 'required|exists:fund_sources,id',
                 'acquisition_date' => 'required|date',
             ]);
@@ -832,7 +820,6 @@ class AssetController extends Controller
                 'update_asset_location' => 'nullable|boolean',
                 'region_id' => 'nullable|exists:regions,id',
                 'asset_location_id' => 'nullable|exists:asset_locations,id',
-                'sub_location_id' => 'nullable|exists:sub_locations,id',
             ]);
 
             logger()->info('Validation passed, updating asset');
@@ -847,13 +834,11 @@ class AssetController extends Controller
                     'asset_id' => $asset->id,
                     'region_id' => $request->region_id,
                     'asset_location_id' => $request->asset_location_id,
-                    'sub_location_id' => $request->sub_location_id,
                 ]);
                 
                 $asset->update([
                     'region_id' => $request->region_id,
                     'asset_location_id' => $request->asset_location_id,
-                    'sub_location_id' => $request->sub_location_id,
                 ]);
             } else {
                 logger()->info('Skipping asset location update - only updating asset item assignee');

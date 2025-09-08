@@ -249,7 +249,6 @@ const form = ref({
     fund_source_id: "",
     region_id: "",
     asset_location_id: "",
-    sub_location_id: "",
     asset_items: [
         {
             asset_tag: "",
@@ -267,41 +266,10 @@ const form = ref({
     ],
 });
 
-const subLocations = ref([]);
 
-const filteredSubLocations = computed(() => {
-    if (!form.value.asset_location) return [];
-    const locId = form.value.asset_location.id || form.value.asset_location;
-    return subLocations.value.filter((sub) => sub.location_id === locId);
-});
 
-function onLocationChange(selected) {
-    form.value.sub_location = null;
-}
 
-const loadSubLocations = async (locationId) => {
-    if (!locationId) {
-        subLocations.value = [];
-        form.value.sub_location_id = "";
-        return;
-    }
-    try {
-        const response = await axios.get(
-            route("assets.locations.sub-locations", { location: locationId })
-        );
-        subLocations.value = response.data;
-    } catch (error) {
-        console.log(error);
-        toast.error("Error loading sub-locations");
-    }
-};
 
-watch(
-    () => form.value.asset_location_id,
-    (newValue) => {
-        loadSubLocations(newValue);
-    }
-);
 
 const statuses = ref([
     { value: "pending_approval", label: "Pending Approval" },
@@ -312,9 +280,7 @@ const statuses = ref([
 ]);
 
 const showLocationModal = ref(false);
-const showSubLocationModal = ref(false);
 const newLocation = ref("");
-const newSubLocation = ref("");
 const newCategory = ref("");
 const newRegion = ref("");
 const newFundSource = ref("");
@@ -324,15 +290,10 @@ const showRegionModal = ref(false);
 const isNewRegion = ref(false);
 const isNewCategory = ref(false);
 const isNewFundSource = ref(false);
-const selectedLocationForSub = ref(null);
 
 const handleLocationSelect = (selected) => {
     if (!selected) {
         form.value.asset_location_id = null;
-        selectedLocationForSub.value = null;
-        form.value.sub_location_id = null;
-        form.value.sub_location = null;
-        subLocations.value = [];
         return;
     }
 
@@ -346,30 +307,8 @@ const handleLocationSelect = (selected) => {
 
     form.value.asset_location_id = selected.id;
     form.value.asset_location = selected;
-    selectedLocationForSub.value = selected.id;
-    loadSubLocations(selected.id);
-    form.value.sub_location_id = null;
-    form.value.sub_location = null;
 };
 
-const handleSubLocationSelect = (selected) => {
-    if (!selected) {
-        form.value.sub_location_id = null;
-        form.value.sub_location = null;
-        return;
-    }
-
-    if (selected.isAddNew) {
-        const currentSelection = form.value.asset_location;
-        showSubLocationModal.value = true;
-        form.value.asset_location = currentSelection;
-        form.value.asset_location_id = currentSelection.id;
-        return;
-    }
-
-    form.value.sub_location_id = selected.id;
-    form.value.sub_location = selected;
-};
 
 const isNewLocation = ref(false);
 const createLocation = async () => {
@@ -389,12 +328,10 @@ const createLocation = async () => {
 
         form.value.asset_location = newLocationData;
         form.value.asset_location_id = newLocationData.id;
-        selectedLocationForSub.value = newLocationData.id;
 
         newLocation.value = "";
         showLocationModal.value = false;
 
-        await loadSubLocations(newLocationData.id);
 
         toast.success("Location created successfully");
     } catch (error) {
@@ -571,40 +508,6 @@ const createFundSource = async () => {
     }
 };
 
-const createSubLocation = async () => {
-    if (!newSubLocation.value || !selectedLocationForSub.value) {
-        toast.error("Please enter a sub-location name and select a location");
-        return;
-    }
-    isNewLocation.value = true;
-
-    try {
-        const response = await axios.post(
-            route("assets.locations.sub-locations.store"),
-            {
-                name: newSubLocation.value,
-                asset_location_id: selectedLocationForSub.value,
-            }
-        );
-        isNewLocation.value = false;
-
-        const newSubLocationData = response.data;
-
-        subLocations.value = [...subLocations.value, newSubLocationData];
-
-        form.value.sub_location = newSubLocationData;
-        form.value.sub_location_id = newSubLocationData.id;
-
-        newSubLocation.value = "";
-        showSubLocationModal.value = false;
-
-        toast.success("Sub-location created successfully");
-    } catch (error) {
-        isNewLocation.value = true;
-        console.error("Error creating sub-location:", error);
-        toast.error(error.response?.data || "Error creating sub-location");
-    }
-};
 
 // Asset Item Management Methods
 const addAssetItem = () => {
@@ -725,7 +628,6 @@ const submit = async () => {
             fund_source_id: form.value.fund_source_id,
             region_id: form.value.region_id,
             asset_location_id: form.value.asset_location_id,
-            sub_location_id: form.value.sub_location_id || "",
             asset_items: form.value.asset_items
         };
 
@@ -833,29 +735,6 @@ const submit = async () => {
                                             <div :class="{ 'add-new-option': option.isAddNew }">
                                                 <span v-if="option.isAddNew" class="text-indigo-600 font-medium">+ Add
                                                     New Location</span>
-                                                <span v-else>{{ option.name }}</span>
-                                            </div>
-                                        </template>
-                                    </Multiselect>
-                                </div>
-                            </div>
-                            <div>
-                                <InputLabel for="sub_location" value="Sub Location" />
-                                <div class="w-full">
-                                    <Multiselect v-model="form.sub_location" :options="[
-                                        ...subLocations,
-                                        {
-                                            id: 'new',
-                                            name: '+ Add New Sub-location',
-                                            isAddNew: true,
-                                        },
-                                    ]" :searchable="true" :close-on-select="true" :show-labels="false"
-                                        :allow-empty="true" placeholder="Select Sub-location" track-by="id" label="name"
-                                        :disabled="!form.asset_location_id" @select="handleSubLocationSelect">
-                                        <template v-slot:option="{ option }">
-                                            <div :class="{ 'add-new-option': option.isAddNew }">
-                                                <span v-if="option.isAddNew" class="text-indigo-600 font-medium">+ Add
-                                                    New Sub-location</span>
                                                 <span v-else>{{ option.name }}</span>
                                             </div>
                                         </template>
@@ -1045,24 +924,6 @@ const submit = async () => {
             </div>
         </Modal>
 
-        <!-- New Sub-Location Modal -->
-        <Modal :show="showSubLocationModal" @close="showSubLocationModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">Add New Sub-Location</h2>
-                <div class="mt-6">
-                    <InputLabel for="new_sub_location" value="Sub-Location Name" />
-                    <input id="new_sub_location" type="text" class="mt-1 block w-full" v-model="newSubLocation"
-                        required />
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <SecondaryButton @click="showSubLocationModal = false" :disabled="isNewLocation">Cancel
-                    </SecondaryButton>
-                    <PrimaryButton :disabled="isNewLocation" @click="createSubLocation">{{ isNewLocation ? "Waiting..."
-                        :
-                        "Create Sub-Location" }}</PrimaryButton>
-                </div>
-            </div>
-        </Modal>
 
         <!-- New Category Modal -->
         <Modal :show="showCategoryModal" @close="showCategoryModal = false">
