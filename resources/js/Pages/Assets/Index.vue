@@ -24,7 +24,7 @@
                             </div>
                         </div>
                         <div class="mt-6 sm:mt-0 flex space-x-3">
-                            <Link v-if="page.props.auth.can.asset_create" :href="route('assets.create')"
+                            <Link v-if="$page.props.auth.can.asset_create" :href="route('assets.create')"
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                 class="w-4 h-4 mr-2">
